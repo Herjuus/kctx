@@ -1,7 +1,5 @@
 package main
 
-// Test
-
 import (
 	"fmt"
 	"os"
