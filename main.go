@@ -44,14 +44,14 @@ func main() {
 	contexts, err := getKubeContexts()
 	exitIfError(err, "Error fetching contexts")
 
-	prompt := promptui.Select{
-		Label: "Select context",
-		Items: contexts,
-		Size:  *nContexts,
-	}
-
 	selectedContext := flag.Arg(0)
 	if selectedContext == "" {
+		prompt := promptui.Select{
+			Label: "Select context",
+			Items: contexts,
+			Size:  *nContexts,
+		}
+
 		_, selectedContext, err = prompt.Run()
 		exitIfError(err, "Error selecting context '%s'", selectedContext, err)
 	}
