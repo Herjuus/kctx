@@ -37,6 +37,23 @@ func exitIfError(err error, msg string, a ...any) {
 	}
 }
 
+func getCurrentContextCursorPos(contexts []string) int {
+	cmd := exec.Command("kubectl", "config", "current-context")
+	out, err := cmd.Output()
+
+	if err != nil {
+		return 0
+	}
+
+	for i, context := range contexts {
+		if strings.TrimSpace(string(out)) == context {
+			return i
+		}
+	}
+
+	return 0
+}
+
 func main() {
 	var nContexts = flag.Int("n", 10, "Number of contexts to display at once")
 	flag.Parse()
@@ -50,9 +67,12 @@ func main() {
 			Label: "Select context",
 			Items: contexts,
 			Size:  *nContexts,
+			Searcher: func(input string, index int) bool {
+				return strings.Contains(strings.ToLower(contexts[index]), strings.ToLower(input))
+			},
 		}
 
-		_, selectedContext, err = prompt.Run()
+		_, selectedContext, err = prompt.RunCursorAt(getCurrentContextCursorPos(contexts), 0)
 		exitIfError(err, "Error selecting context '%s'", selectedContext)
 	}
 
