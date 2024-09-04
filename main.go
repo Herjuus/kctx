@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -29,28 +30,34 @@ func switchContext(context string) error {
 	return nil
 }
 
+func exitIfError(err error, msg string, a ...any) {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, fmt.Sprintf("%s: %s\n", msg, err.Error()), a...)
+		os.Exit(1)
+	}
+}
+
 func main() {
+	var nContexts = flag.Int("n", 10, "Number of contexts to display at once")
+	flag.Parse()
+
 	contexts, err := getKubeContexts()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error fetching contexts: %v\n", err)
-		os.Exit(1)
-	}
+	exitIfError(err, "Error fetching contexts")
 
-	prompt := promptui.Select{
-		Label: "Select context",
-		Items: contexts,
-	}
+	selectedContext := flag.Arg(0)
+	if selectedContext == "" {
+		prompt := promptui.Select{
+			Label: "Select context",
+			Items: contexts,
+			Size:  *nContexts,
+		}
 
-	_, selectedContext, err := prompt.Run()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error selecting context: %v\n", err)
-		os.Exit(1)
+		_, selectedContext, err = prompt.Run()
+		exitIfError(err, "Error selecting context '%s'", selectedContext)
 	}
 
 	err = switchContext(selectedContext)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error switching context: %v\n", err)
-	}
+	exitIfError(err, "Error switching context to '%s'", selectedContext)
 
-	fmt.Printf("Set current context to: %s\n", selectedContext)
+	fmt.Printf("Set current context to '%s'\n", selectedContext)
 }
