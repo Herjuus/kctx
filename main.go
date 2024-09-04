@@ -21,6 +21,19 @@ func getKubeContexts() ([]string, error) {
 	return contexts, nil
 }
 
+func getCurrentContextCursorPos(contexts []string) int {
+	cmd := exec.Command("kubectl", "config", "current-context")
+	out, _ := cmd.Output()
+
+	for i, context := range contexts {
+		if strings.TrimSpace(string(out)) == context {
+			return i
+		}
+	}
+
+	return 0
+}
+
 func switchContext(context string) error {
 	cmd := exec.Command("kubectl", "config", "use-context", context)
 	err := cmd.Run()
@@ -35,23 +48,6 @@ func exitIfError(err error, msg string, a ...any) {
 		fmt.Fprintf(os.Stderr, fmt.Sprintf("%s: %s\n", msg, err.Error()), a...)
 		os.Exit(1)
 	}
-}
-
-func getCurrentContextCursorPos(contexts []string) int {
-	cmd := exec.Command("kubectl", "config", "current-context")
-	out, err := cmd.Output()
-
-	if err != nil {
-		return 0
-	}
-
-	for i, context := range contexts {
-		if strings.TrimSpace(string(out)) == context {
-			return i
-		}
-	}
-
-	return 0
 }
 
 func main() {
