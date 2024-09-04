@@ -53,7 +53,7 @@ func main() {
 		}
 
 		_, selectedContext, err = prompt.Run()
-		exitIfError(err, "Error selecting context '%s'", selectedContext, err)
+		exitIfError(err, "Error selecting context '%s'", selectedContext)
 	}
 
 	err = switchContext(selectedContext)
