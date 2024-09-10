@@ -42,6 +42,19 @@ func getKubeContexts() ([]string, error) {
 	return contexts, nil
 }
 
+func getCurrentContextCursorPos(contexts []string) int {
+	cmd := exec.Command("kubectl", "config", "current-context")
+	out, _ := cmd.Output()
+
+	for i, context := range contexts {
+		if strings.TrimSpace(string(out)) == context {
+			return i
+		}
+	}
+
+	return 0
+}
+
 func switchContext(context string) error {
 	context = strings.TrimSpace(strings.Replace(context, "(current)", "", 1))
 
@@ -73,9 +86,12 @@ func main() {
 			Label: "Select context",
 			Items: contexts,
 			Size:  *nContexts,
+			Searcher: func(input string, index int) bool {
+				return strings.Contains(strings.ToLower(contexts[index]), strings.ToLower(input))
+			},
 		}
 
-		_, selectedContext, err = prompt.Run()
+		_, selectedContext, err = prompt.RunCursorAt(getCurrentContextCursorPos(contexts), 0)
 		exitIfError(err, "Error selecting context '%s'", selectedContext)
 	}
 
